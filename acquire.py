@@ -197,7 +197,56 @@ def wrangle_mall():
         # Return the dataframe to the calling code
         return df
     
+def tsa_item_demand():
+    """
+    This function gets all data from the mall_customers database.
+    """
+    filename = "tsa_item_demand.csv"
+    
+    if os.path.isfile(filename):
+        return pd.read_csv(filename)
+    else:
+        
+        # read the SQL query into a dataframe
+        query = """
+        SELECT * FROM sales JOIN items USING (item_id) JOIN stores USING (store_id);
+        """
 
+        df = pd.read_sql(query, get_connection('tsa_item_demand'))
+        
+        # Write that dataframe to disk for later. Called "caching" the data for later.
+        df.to_csv(filename, index=False)
+        
+        # Return the dataframe to the calling code
+        return df
+
+def acquire_store():
+    
+    filename = 'store.csv'
+    
+    if os.path.exists(filename):
+        
+        return pd.read_csv(filename)
+    
+    else:
+        
+        query = '''
+                SELECT sale_date, sale_amount,
+                item_brand, item_name, item_price,
+                store_address, store_zipcode
+                FROM sales
+                LEFT JOIN items USING(item_id)
+                LEFT JOIN stores USING(store_id)
+                '''
+        
+        url = get_connection(db='tsa_item_demand')
+        
+        df = pd.read_sql(query, url)
+        
+        df.to_csv(filename, index=False)
+        
+        return df
+    
 
 def wrangle_iris():
     """
@@ -220,5 +269,37 @@ def wrangle_iris():
         # Write that dataframe to disk for later. Called "caching" the data for later.
         df.to_csv(filename, index=False)
         
+        # Return the dataframe to the calling code
+        return df
+    
+def get_superstore_data():
+
+    """
+    This function gets all data from the superstore database.
+    """
+    filename = "superstore.csv"
+
+    if os.path.isfile(filename):
+        return pd.read_csv(filename,  parse_dates=['Order Date', 'Ship Date'])
+    else:
+
+        # read the SQL query into a dataframe
+        query = """ 
+        SELECT * FROM orders
+        LEFT JOIN categories USING (`Category ID`)
+        LEFT JOIN customers USING (`Customer ID`)
+        LEFT JOIN products USING (`Product ID`)
+        LEFT JOIN regions USING (`Region ID`);
+        """
+
+        df = pd.read_sql(query, get_connection('superstore_db'))
+
+        df['Order Date'] = pd.to_datetime(df['Order Date'],
+                                          infer_datetime_format=True)
+        df['Ship Date'] = pd.to_datetime(df['Ship Date'],
+                                         infer_datetime_format=True)        
+        # Write that dataframe to disk for later. Called "caching" the data for later.
+        df.to_csv(filename, index=False)
+
         # Return the dataframe to the calling code
         return df
