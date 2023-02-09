@@ -24,7 +24,7 @@ def prepare_germany(df):
     df['Date'] = pd.to_datetime(df['Date'])
 
     #Date-time column to index
-    df.set_index('Date', inplace=True)
+    df.set_index('Date', inplace=True).sort_index()
 
     #Adds month column
     df['Month'] = df.index.month_name()
